@@ -1,6 +1,6 @@
 // /pages/secret-page-1.js
 import useAuth from "../hooks/useAuth";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/sss";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 

@@ -1,6 +1,6 @@
 // /pages/secret-page-2.js
 import useAuth from "../hooks/useAuth";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/sss";
 import SecretMessage from "../components/SecretMessage";
 
 export default function SecretPage2() {
