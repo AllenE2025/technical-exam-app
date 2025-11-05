@@ -1,24 +1,24 @@
 // /pages/secret-page-3.js
-import { useEffect, useState } from "react"
-import useAuth from "../hooks/useAuth"
-import Navbar from "../components/Navbar"
-import { supabase } from "../lib/supabaseClient"
+import { useEffect, useState } from "react";
+import useAuth from "../hooks/useAuth";
+import Navbar from "../components/Navbar";
+import { supabase } from "../lib/supabaseClient";
 
 export default function SecretPage3() {
-  const { user, loading } = useAuth()
-  const [friends, setFriends] = useState([])
-  const [requests, setRequests] = useState([])
-  const [friendEmail, setFriendEmail] = useState("")
-  const [friendMessages, setFriendMessages] = useState([])
-  const [error, setError] = useState(null)
+  const { user, loading } = useAuth();
+  const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [friendEmail, setFriendEmail] = useState("");
+  const [friendMessages, setFriendMessages] = useState([]);
+  const [error, setError] = useState(null);
 
   // ✅ Load friends + requests
   useEffect(() => {
     if (user) {
-      fetchFriends()
-      fetchFriendRequests()
+      fetchFriends();
+      fetchFriendRequests();
     }
-  }, [user])
+  }, [user]);
 
   // ✅ Fetch current user's friends
   const fetchFriends = async () => {
@@ -26,11 +26,11 @@ export default function SecretPage3() {
       .from("friends")
       .select("friend_id, users:friend_id(email)")
       .eq("user_id", user.id)
-      .eq("status", "accepted")
+      .eq("status", "accepted");
 
-    if (error) console.error(error)
-    else setFriends(data)
-  }
+    if (error) console.error(error);
+    else setFriends(data);
+  };
 
   // ✅ Fetch pending friend requests (where current user is the target)
   const fetchFriendRequests = async () => {
@@ -38,31 +38,31 @@ export default function SecretPage3() {
       .from("friends")
       .select("id, user_id, users:user_id(email)")
       .eq("friend_id", user.id)
-      .eq("status", "pending")
+      .eq("status", "pending");
 
-    if (error) console.error(error)
-    else setRequests(data)
-  }
+    if (error) console.error(error);
+    else setRequests(data);
+  };
 
   // ✅ Send friend request
   const handleAddFriend = async () => {
-    setError(null)
-    if (!friendEmail) return alert("Please enter a friend's email.")
+    setError(null);
+    if (!friendEmail) return alert("Please enter a friend's email.");
 
     const { data: friendUser, error: userError } = await supabase
       .from("auth.users")
       .select("id, email")
       .eq("email", friendEmail)
-      .single()
+      .single();
 
     if (userError || !friendUser) {
-      setError("No user found with that email.")
-      return
+      setError("No user found with that email.");
+      return;
     }
 
     if (friendUser.id === user.id) {
-      setError("You cannot add yourself.")
-      return
+      setError("You cannot add yourself.");
+      return;
     }
 
     const { error } = await supabase.from("friends").insert([
@@ -71,62 +71,64 @@ export default function SecretPage3() {
         friend_id: friendUser.id,
         status: "pending",
       },
-    ])
+    ]);
 
     if (error) {
-      console.error(error)
-      setError("Failed to send friend request.")
+      console.error(error);
+      setError("Failed to send friend request.");
     } else {
-      alert("Friend request sent!")
-      setFriendEmail("")
+      alert("Friend request sent!");
+      setFriendEmail("");
     }
-  }
+  };
 
   // ✅ Accept friend request
   const handleAccept = async (requestId) => {
     const { data, error } = await supabase
       .from("friends")
       .update({ status: "accepted" })
-      .eq("id", requestId)
+      .eq("id", requestId);
 
-    if (error) console.error(error)
+    if (error) console.error(error);
     else {
-      alert("Friend request accepted!")
-      fetchFriends()
-      fetchFriendRequests()
+      alert("Friend request accepted!");
+      fetchFriends();
+      fetchFriendRequests();
     }
-  }
+  };
 
   // ✅ View friend secret messages
   const handleViewFriendMessage = async (friendId) => {
-    setError(null)
+    setError(null);
     const { data, error } = await supabase
       .from("secret_messages")
       .select("message")
       .eq("user_id", friendId)
-      .single()
+      .single();
 
     if (error && error.code === "PGRST116") {
-      setError("401: You are not friends with this user or message not found.")
-      return
+      setError("401: You are not friends with this user or message not found.");
+      return;
     }
 
     if (error) {
-      console.error(error)
-      setError("Error retrieving friend’s message.")
-      return
+      console.error(error);
+      setError("Error retrieving friend’s message.");
+      return;
     }
 
-    setFriendMessages([{ friendId, message: data.message }])
-  }
+    setFriendMessages([{ friendId, message: data.message }]);
+  };
 
-  if (loading) return <p>Loading user...</p>
+  if (loading) return <p>Loading user...</p>;
 
   return (
     <div style={{ padding: 40 }}>
       <Navbar />
       <h1>👥 Secret Page 3</h1>
-      <p>Welcome, <strong>{user.email}</strong>!</p>
+      <p>
+        Welcome, <strong>{user.email}</strong>!
+      </p>
       <p>Here you can add friends and view their secret messages.</p>
 
       <div
@@ -143,7 +145,11 @@ export default function SecretPage3() {
           placeholder="Friend's email"
           value={friendEmail}
           onChange={(e) => setFriendEmail(e.target.value)}
-          style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ccc" }}
+          style={{
+            padding: "8px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+          }}
         />
         <button
           onClick={handleAddFriend}
@@ -238,5 +244,5 @@ export default function SecretPage3() {
 
       {error && <p style={{ color: "red", marginTop: "20px" }}>{error}</p>}
     </div>
-  )
+  );
 }

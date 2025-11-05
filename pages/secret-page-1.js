@@ -1,40 +1,42 @@
 // /pages/secret-page-1.js
-import useAuth from "../hooks/useAuth"
-import Navbar from "../components/Navbar"
-import { useEffect, useState } from "react"
-import { supabase } from "../lib/supabaseClient"
+import useAuth from "../hooks/useAuth";
+import Navbar from "../components/Navbar";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function SecretPage1() {
-  const { user, loading } = useAuth()
-  const [message, setMessage] = useState("")
-  const [loadingMessage, setLoadingMessage] = useState(true)
+  const { user, loading } = useAuth();
+  const [message, setMessage] = useState("");
+  const [loadingMessage, setLoadingMessage] = useState(true);
 
   // ✅ Fetch the secret message on load
   useEffect(() => {
-    if (!user) return
-    fetchMessage()
-  }, [user])
+    if (!user) return;
+    fetchMessage();
+  }, [user]);
 
   const fetchMessage = async () => {
-    setLoadingMessage(true)
+    setLoadingMessage(true);
     const { data, error } = await supabase
       .from("secret_messages")
       .select("message")
       .eq("user_id", user.id)
-      .single()
+      .single();
 
-    if (error && error.code !== "PGRST116") console.error(error)
-    setMessage(data?.message || "No secret message yet.")
-    setLoadingMessage(false)
-  }
+    if (error && error.code !== "PGRST116") console.error(error);
+    setMessage(data?.message || "No secret message yet.");
+    setLoadingMessage(false);
+  };
 
-  if (loading) return <p>Loading user...</p>
+  if (loading) return <p>Loading user...</p>;
 
   return (
     <div style={{ padding: 40 }}>
       <Navbar />
       <h1>🔐 Secret Page 1</h1>
-      <p>Welcome, <strong>{user.email}</strong>!</p>
+      <p>
+        Welcome, <strong>{user.email}</strong>!
+      </p>
 
       {loadingMessage ? (
         <p>Fetching your secret message...</p>
@@ -52,5 +54,5 @@ export default function SecretPage1() {
         </div>
       )}
     </div>
-  )
+  );
 }
