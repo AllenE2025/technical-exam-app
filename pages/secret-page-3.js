@@ -50,16 +50,18 @@ export default function SecretPage3() {
     if (!friendEmail) return alert("Please enter a friend's email.");
 
     // friendEmail comes from the input field
-const { data: friend, error: friendError } = await supabase
-  .from("profiles")
-  .select("id")
+const { data, error } = await supabase
+  .from("app_users")
+  .select("id, email")
   .eq("email", friendEmail)
   .single();
 
-if (friendError || !friend) {
+if (error || !data) {
   alert("No user with that email found.");
   return;
 }
+
+console.log("Found user:", data);
 
 // Prevent adding yourself
 if (friend.id === user.id) {
