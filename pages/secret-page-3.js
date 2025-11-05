@@ -49,37 +49,40 @@ export default function SecretPage3() {
     setError(null);
     if (!friendEmail) return alert("Please enter a friend's email.");
 
-    const { data: friendUser, error: userError } = await supabase
-      .from("auth.users")
-      .select("id, email")
-      .eq("email", friendEmail)
-      .single();
+    // friendEmail comes from the input field
+const { data: friend, error: friendError } = await supabase
+  .from("profiles")
+  .select("id")
+  .eq("email", friendEmail)
+  .single();
 
-    if (userError || !friendUser) {
-      setError("No user found with that email.");
-      return;
-    }
+if (friendError || !friend) {
+  alert("No user with that email found.");
+  return;
+}
 
-    if (friendUser.id === user.id) {
-      setError("You cannot add yourself.");
-      return;
-    }
+// Prevent adding yourself
+if (friend.id === user.id) {
+  alert("You cannot add yourself as a friend.");
+  return;
+}
 
-    const { error } = await supabase.from("friends").insert([
-      {
-        user_id: user.id,
-        friend_id: friendUser.id,
-        status: "pending",
-      },
-    ]);
+// Insert into friends table
+const { error: insertError } = await supabase
+  .from("friends")
+  .insert({
+    user_id: user.id,
+    friend_id: friend.id,
+    status: "pending"
+  });
 
-    if (error) {
-      console.error(error);
-      setError("Failed to send friend request.");
-    } else {
-      alert("Friend request sent!");
-      setFriendEmail("");
-    }
+if (insertError) {
+  console.error(insertError);
+  alert("Error sending friend request.");
+} else {
+  alert("Friend request sent!");
+}
+
   };
 
   // ✅ Accept friend request
