@@ -12,7 +12,6 @@ export default function SecretPage3() {
   const [friendMessages, setFriendMessages] = useState([]);
   const [error, setError] = useState(null);
 
-  // ✅ Load friends + requests
   useEffect(() => {
     if (user) {
       fetchFriends();
@@ -20,76 +19,80 @@ export default function SecretPage3() {
     }
   }, [user]);
 
-  // ✅ Fetch current user's friends
   const fetchFriends = async () => {
     const { data, error } = await supabase
       .from("friends")
-      .select("friend_id, users:friend_id(email)")
-      .eq("user_id", user.id)
+      .select(`
+        user_id,
+        friend_id,
+        user: user_id (email),
+        friend: friend_id (email)
+      `)
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
       .eq("status", "accepted");
 
     if (error) console.error(error);
-    else setFriends(data);
+    else setFriends(data || []);
   };
 
-  // ✅ Fetch pending friend requests (where current user is the target)
   const fetchFriendRequests = async () => {
     const { data, error } = await supabase
       .from("friends")
-      .select("id, user_id, users:user_id(email)")
+      .select(`
+        id,
+        user_id,
+        user: user_id (email)
+      `)
       .eq("friend_id", user.id)
       .eq("status", "pending");
 
     if (error) console.error(error);
-    else setRequests(data);
+    else setRequests(data || []);
   };
 
-  // ✅ Send friend request
   const handleAddFriend = async () => {
     setError(null);
     if (!friendEmail) return alert("Please enter a friend's email.");
 
-    // friendEmail comes from the input field
-const { data, error } = await supabase
-  .from("app_users")
-  .select("id, email")
-  .eq("email", friendEmail)
-  .single();
+    const { data: friend, error } = await supabase
+      .from("app_users")
+      .select("id, email")
+      .eq("email", friendEmail)
+      .single();
 
-if (error || !data) {
-  alert("No user with that email found.");
-  return;
-}
+    if (error || !friend) {
+      alert("No user with that email found.");
+      return;
+    }
 
-console.log("Found user:", data);
+    if (friend.id === user.id) {
+      alert("You cannot add yourself as a friend.");
+      return;
+    }
 
-// Prevent adding yourself
-if (friend.id === user.id) {
-  alert("You cannot add yourself as a friend.");
-  return;
-}
+    const { data: exists } = await supabase
+      .from("friends")
+      .select("*")
+      .or(
+        `and(user_id.eq.${user.id},friend_id.eq.${friend.id}),and(user_id.eq.${friend.id},friend_id.eq.${user.id})`
+      )
+      .single();
 
-// Insert into friends table
-const { error: insertError } = await supabase
-  .from("friends")
-  .insert({
-    user_id: user.id,
-    friend_id: friend.id,
-    status: "pending"
-  });
+    if (exists) {
+      alert("Friend request or friendship already exists.");
+      return;
+    }
 
-if (insertError) {
-  console.error(insertError);
-  alert("Error sending friend request.");
-} else {
-  alert("Friend request sent!");
-}
+    const { error: insertError } = await supabase
+      .from("friends")
+      .insert({ user_id: user.id, friend_id: friend.id, status: "pending" });
 
+    if (insertError) console.error(insertError);
+    else alert("Friend request sent!");
   };
 
-  // ✅ Accept friend request
   const handleAccept = async (requestId) => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("friends")
       .update({ status: "accepted" })
       .eq("id", requestId);
@@ -102,7 +105,6 @@ if (insertError) {
     }
   };
 
-  // ✅ View friend secret messages
   const handleViewFriendMessage = async (friendId) => {
     setError(null);
     const { data, error } = await supabase
@@ -112,142 +114,145 @@ if (insertError) {
       .single();
 
     if (error && error.code === "PGRST116") {
-      setError("401: You are not friends with this user or message not found.");
+      setError("You are not friends with this user or message not found.");
       return;
     }
 
     if (error) {
       console.error(error);
-      setError("Error retrieving friend’s message.");
+      setError("Error retrieving friend's message.");
       return;
     }
 
-    setFriendMessages([{ friendId, message: data.message }]);
+    setFriendMessages([{ friendId, message: data?.message || "No message yet." }]);
   };
 
   if (loading) return <p>Loading user...</p>;
 
-  return (
-    <div style={{ padding: 40 }}>
-      <Navbar />
-      <h1>👥 Secret Page 3</h1>
-      <p>
-        Welcome, <strong>{user.email}</strong>!
-      </p>
-      <p>Here you can add friends and view their secret messages.</p>
+  const cardStyle = {
+    background: "linear-gradient(145deg, #ffffff, #e6e6e6)",
+    padding: 20,
+    borderRadius: 12,
+    boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
+    marginTop: 20,
+    maxWidth: 500,
+    transition: "transform 0.2s, box-shadow 0.2s",
+  };
 
-      <div
-        style={{
-          background: "#f4f4f4",
-          padding: "20px",
-          borderRadius: "8px",
-          marginTop: "20px",
-        }}
-      >
-        <h3>Add a Friend</h3>
+  const buttonStyle = {
+    padding: "6px 12px",
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    transition: "transform 0.2s",
+  };
+
+  const buttonHover = {
+    transform: "scale(1.05)",
+  };
+
+  return (
+    <div style={{ padding: 40, fontFamily: "Inter, sans-serif" }}>
+      <Navbar />
+      <h1 style={{ marginBottom: 20, color: "#333" }}>👥 Secret Page 3</h1>
+      <p style={{ marginBottom: 20, color: "#555" }}>
+        Welcome, <strong>{user.email}</strong>! Manage your friends and view their secret messages.
+      </p>
+
+      {/* Add friend */}
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: 12 }}>Add a Friend</h3>
         <input
           type="email"
           placeholder="Friend's email"
           value={friendEmail}
           onChange={(e) => setFriendEmail(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
+          style={{ padding: 10, borderRadius: 6, border: "1px solid #ccc", width: "70%" }}
         />
         <button
           onClick={handleAddFriend}
-          style={{
-            background: "#333",
-            color: "#fff",
-            border: "none",
-            padding: "6px 10px",
-            borderRadius: "4px",
-            marginLeft: "8px",
-            cursor: "pointer",
-          }}
+          style={{ ...buttonStyle, marginLeft: 10, background: "#007bff", color: "#fff" }}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
           Send Request
         </button>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+        {error && <p style={{ color: "red", marginTop: 10 }}>{error}</p>}
       </div>
 
-      <div style={{ marginTop: "30px" }}>
-        <h3>Pending Friend Requests</h3>
+      {/* Pending requests */}
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: 12 }}>Pending Friend Requests</h3>
         {requests.length === 0 ? (
           <p>No pending requests.</p>
         ) : (
           requests.map((req) => (
-            <div key={req.id}>
-              <p>
-                {req.users.email}
-                <button
-                  onClick={() => handleAccept(req.id)}
-                  style={{
-                    marginLeft: "10px",
-                    background: "#28a745",
-                    color: "#fff",
-                    border: "none",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Accept
-                </button>
-              </p>
+            <div
+              key={req.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+            >
+              <span>{req.user.email}</span>
+              <button
+                onClick={() => handleAccept(req.id)}
+                style={{ ...buttonStyle, background: "#28a745", color: "#fff" }}
+                onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              >
+                Accept
+              </button>
             </div>
           ))
         )}
       </div>
 
-      <div style={{ marginTop: "30px" }}>
-        <h3>Your Friends</h3>
+      {/* Friends list */}
+      <div style={cardStyle}>
+        <h3 style={{ marginBottom: 12 }}>Your Friends</h3>
         {friends.length === 0 ? (
           <p>You have no friends yet.</p>
         ) : (
-          friends.map((f) => (
-            <div key={f.friend_id}>
-              <p>
-                {f.users.email}
+          friends.map((f) => {
+            const otherEmail = f.user_id === user.id ? f.friend.email : f.user.email;
+            const otherId = f.user_id === user.id ? f.friend_id : f.user_id;
+            return (
+              <div
+                key={otherId}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+              >
+                <span>{otherEmail}</span>
                 <button
-                  onClick={() => handleViewFriendMessage(f.friend_id)}
-                  style={{
-                    marginLeft: "10px",
-                    background: "#007bff",
-                    color: "#fff",
-                    border: "none",
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
+                  onClick={() => handleViewFriendMessage(otherId)}
+                  style={{ ...buttonStyle, background: "#ff6f61", color: "#fff" }}
+                  onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                  onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
                 >
                   View Secret
                 </button>
-              </p>
-            </div>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
 
+      {/* Friend messages */}
       {friendMessages.length > 0 && (
-        <div
-          style={{
-            background: "#e9ecef",
-            padding: "20px",
-            borderRadius: "8px",
-            marginTop: "30px",
-          }}
-        >
-          <h3>Friend's Secret Message</h3>
+        <div style={{ ...cardStyle, background: "#f0f8ff" }}>
+          <h3 style={{ marginBottom: 12 }}>Friend's Secret Message</h3>
           {friendMessages.map((f) => (
             <p key={f.friendId}>{f.message}</p>
           ))}
         </div>
       )}
-
-      {error && <p style={{ color: "red", marginTop: "20px" }}>{error}</p>}
     </div>
   );
 }

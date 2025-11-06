@@ -9,7 +9,6 @@ export default function SecretPage1() {
   const [message, setMessage] = useState("");
   const [loadingMessage, setLoadingMessage] = useState(true);
 
-  // ✅ Fetch the secret message on load
   useEffect(() => {
     if (!user) return;
     fetchMessage();
@@ -28,31 +27,81 @@ export default function SecretPage1() {
     setLoadingMessage(false);
   };
 
-  if (loading) return <p>Loading user...</p>;
+  if (loading) return <p style={styles.loading}>Loading user...</p>;
 
   return (
-    <div style={{ padding: 40 }}>
+    <div style={styles.container}>
       <Navbar />
-      <h1>🔐 Secret Page 1</h1>
-      <p>
-        Welcome, <strong>{user.email}</strong>!
-      </p>
+      <div style={styles.card}>
+        <h1 style={styles.title}>🔐 Secret Page 1</h1>
+        <p style={styles.subtitle}>
+          Welcome, <strong>{user.email}</strong>!
+        </p>
 
-      {loadingMessage ? (
-        <p>Fetching your secret message...</p>
-      ) : (
-        <div
-          style={{
-            background: "#f4f4f4",
-            padding: "20px",
-            borderRadius: "8px",
-            marginTop: "20px",
-          }}
-        >
-          <h3>Your Secret Message</h3>
-          <p>{message}</p>
-        </div>
-      )}
+        {loadingMessage ? (
+          <p style={styles.loading}>Fetching your secret message...</p>
+        ) : (
+          <div style={styles.messageCard}>
+            <h3 style={styles.messageTitle}>Your Secret Message</h3>
+            <p style={styles.messageText}>{message}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
+
+// Styles
+const styles = {
+  container: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
+    fontFamily: "Inter, sans-serif",
+    paddingBottom: 40,
+  },
+  card: {
+    maxWidth: 600,
+    margin: "40px auto 0",
+    background: "#fff",
+    borderRadius: 16,
+    padding: 30,
+    boxShadow: "0 15px 35px rgba(0,0,0,0.12)",
+    textAlign: "center",
+    transition: "transform 0.2s, box-shadow 0.2s",
+    cursor: "default",
+  },
+  title: {
+    color: "#333",
+    marginBottom: 12,
+  },
+  subtitle: {
+    color: "#555",
+    marginBottom: 20,
+    fontSize: 16,
+  },
+  messageCard: {
+    background: "#f0f8ff",
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 20,
+    textAlign: "left",
+    boxShadow: "0 6px 15px rgba(0,0,0,0.1)",
+    transition: "transform 0.2s",
+  },
+  messageTitle: {
+    marginBottom: 10,
+    color: "#2575fc",
+    fontWeight: 600,
+  },
+  messageText: {
+    fontSize: 16,
+    color: "#333",
+    lineHeight: 1.5,
+  },
+  loading: {
+    fontStyle: "italic",
+    color: "#fff",
+    textAlign: "center",
+    marginTop: 40,
+  },
+};
