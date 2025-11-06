@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🧩 Secret Page App
 
-## Getting Started
+A modern Next.js + Supabase authentication demo that allows users to register, log in, and access secret pages.
+Designed with a clean, aesthetic UI and smooth animations to provide a sleek, modern experience.
 
-First, run the development server:
+🚀 Features
 
-```bash
+🔐 User Authentication with Supabase (email + password)
+
+🧭 Protected Pages — only logged-in users can access secret pages
+
+🎨 Modern UI/UX — gradient background, smooth transitions, and responsive design
+
+⚙️ Account Management — register, login, logout, and simulated delete
+
+⚡ Built with Next.js and React Hooks
+
+🛠️ Tech Stack
+
+Frontend: Next.js, React
+
+Backend/Auth: Supabase
+
+Styling: Inline CSS with gradient & animation effects
+
+📦 Installation
+
+1. Clone the repository
+
+git clone https://github.com/your-username/secret-page-app.git
+cd secret-page-app
+
+
+2. Install dependencies
+
+npm install
+# or
+yarn install
+
+3. Set up Supabase
+
+Go to https://supabase.com
+
+4. Create a new project
+
+Get your Project URL and Anon Key
+
+Add them to .env.local:
+
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+
+Run the development server
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Then open http://localhost:3000
+ in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ 🔐 Usage
 
-## Learn More
+Register a new account using your email and password
 
-To learn more about Next.js, take a look at the following resources:
+Confirm your email via Supabase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Login and access any of the secret pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Logout or delete your account (simulated client-side)
 
-## Deploy on Vercel
+💅 UI Highlights
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Centered and responsive design
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Smooth fade-in animation on page load
+
+Gradient background and modern button hover effects
+
+Clean and minimal card layout for readability
+
+🧠 Notes
+
+Account deletion must be implemented on a server-side API route for real data removal.
+
+Designed as a learning and demonstration project for Supabase Auth integration.
+
+🧑‍💻 Author
+
+David Allen Evangelista
+📚 4th Year BS Computer Engineering — STI College Global City
+💻 Passionate about Full-Stack Development (Laravel, Vue.js, React, Next.js)
